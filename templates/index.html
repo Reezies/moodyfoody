@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>MoodyFoody</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1>MoodyFoody 🍽️</h1>
+
+{% if rekomendasi %}
+<!-- Header bar -->
+<div class="top-bar">
+    <form action="/rekomendasi" method="post" id="form">
+        <input type="hidden" name="mood" id="mood" value="{{ mood }}">
+        <select name="kecamatan" required class="dropdown-kecamatan">
+            {% for kec in kecamatan_list %}
+                <option value="{{ kec }}" {% if kec == kecamatan %}selected{% endif %}>{{ kec.title() }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <button id="changeMoodBtn" class="mood-icon" title="Ganti Mood">
+        {% if mood == "senang" %}😊{% elif mood == "sedih" %}😢{% elif mood == "marah" %}😠{% elif mood == "bosan" %}😐{% endif %}
+    </button>
+</div>
+
+
+
+
+    {% set icon_cuaca = {
+    'Cerah': '☀️',
+    'Hujan': '🌧️',
+    'Gerimis': '🌦️',
+    'Badai Petir': '⛈️',
+    'Berawan': '☁️',
+    'Kabut Tipis': '🌫️',
+    'Berkabut': '🌫️'
+}[cuaca] if cuaca in ['Cerah','Hujan','Gerimis','Badai Petir','Berawan','Kabut Tipis','Berkabut'] else '🌥️' %}
+
+<h2>Ini rekomendasi buat kamu yang lagi <span class="highlight">{{ mood }}</span> di <span class="highlight">{{ kecamatan }}</span> yang cuacanya <span class="highlight">{{ cuaca }}{{ icon_cuaca }}</span></h2>
+
+        <div class="results-scroll-container">
+            <div class="results">
+
+            {% if rekomendasi|length == 0 %}
+                <p>Belum ada data restoran di kecamatan ini.</p>
+            {% else %}
+                {% for resto in rekomendasi %}
+                    <div class="resto-box {% if resto['skor'] == top_score or resto['skor'] == top_score - 1 %}highlight{% endif %}">
+                        <div class="resto-row">
+                            <div class="resto-name">{{ resto['nama'] }}</div>
+                            <div class="resto-rating">⭐ {{ resto['rating'] }} ({{ resto['j_rating'] }})</div>
+                            <div class="resto-score">🎯 Skor Kecocokan: {{ resto['skor'] }}</div>
+                            <div>
+                                <a style="text-decoration:none" href="{{ resto['link'] }}" target="_blank">Lihat di Maps</a>
+                                {% if resto['jempol'] %}
+                                    <span style="margin-left: 8px;">👍</span>
+                                {% endif %}
+                            </div>
+
+
+
+                            
+                        </div>
+                    </div>
+                    <hr>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+
+        <!-- Tombol kemb   <divali -->
+        <form action="/" method="get">
+            <button class="back-btn">🔙 Kembali ke menu utama</button>
+        </form>
+    {% else %}
+        <!-- Popup Pilih Mood -->
+        <div id="popup" class="popup">
+            <div class="popup-content">
+                <h2>Pilih Mood Kamu</h2>
+                <div class="mood-buttons">
+                    <button class="mood-btn" data-mood="senang">😊 Senang</button>
+                    <button class="mood-btn" data-mood="sedih">😢 Sedih</button>
+                    <button class="mood-btn" data-mood="marah">😠 Marah</button>
+                    <button class="mood-btn" data-mood="bosan">😐 Bosan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Pilih Kecamatan -->
+        <form action="/rekomendasi" method="post" id="form">
+            <input type="hidden" name="mood" id="mood" value="{{ mood if mood else '' }}">
+            <label for="kecamatan">Pilih Kecamatan:</label>
+            <select name="kecamatan" id="kecamatan" required>
+                <option value="">-- Pilih Kecamatan --</option>
+                {% for kec in kecamatan_list %}
+                    <option value="{{ kec }}" {% if kec == kecamatan %}selected{% endif %}>{{ kec.title() }}</option>
+                {% endfor %}
+    </select>
+
+    {% if not rekomendasi %}
+        <button type="submit">Cari Rekomendasi</button>
+    {% endif %}
+</form>
+
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const popup = document.getElementById("popup");
+    const moodButtons = document.querySelectorAll(".mood-btn");
+    const moodInput = document.getElementById("mood");
+    const form = document.getElementById("form");
+    const changeMoodBtn = document.getElementById("changeMoodBtn");
+    const kecamatanSelect = document.querySelector("select[name='kecamatan']");
+    const isResultPage = document.querySelector(".results") !== null;  // ⬅️ Ini pengganti template
+
+    const initialMood = "{{ mood if mood else '' }}";
+        
+    // Jika belum pilih mood, tampilkan popup
+    if (!initialMood) {
+        popup.style.display = "block";
+        form.style.display = "none";
+    } else {
+        popup.style.display = "none";
+        if (form) form.style.display = "block";
+    }
+
+    // Ketika klik ikon mood (untuk ganti mood)
+    if (changeMoodBtn) {
+        changeMoodBtn.addEventListener("click", function () {
+            popup.style.display = "block";
+            if (form) form.style.display = "none";
+        });
+    }
+
+    // Mood dipilih dari popup
+    moodButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            const selectedMood = this.getAttribute("data-mood");
+            moodInput.value = selectedMood;
+            popup.style.display = "none";
+            form.style.display = "block";
+            if (kecamatanSelect.value) {
+                form.submit(); // langsung cari ulang
+            }
+        });
+    });
+
+    // Ganti kecamatan langsung kirim (jika sedang di halaman hasil)
+    if (kecamatanSelect) {
+        kecamatanSelect.addEventListener("change", function () {
+            if (moodInput.value && isResultPage) {
+                form.submit();
+            }
+        });
+    }
+});
+
+</script>
+
+
+
+<!-- Popup Pilih Mood (selalu disiapkan meskipun hasil rekomendasi ditampilkan) -->
+<div id="popup" class="popup" style="display: none;">
+    <div class="popup-content">
+        <h2>Pilih Mood Kamu</h2>
+        <div class="mood-buttons">
+            <button class="mood-btn" data-mood="senang">😊 Senang</button>
+            <button class="mood-btn" data-mood="sedih">😢 Sedih</button>
+            <button class="mood-btn" data-mood="marah">😠 Marah</button>
+            <button class="mood-btn" data-mood="bosan">😐 Bosan</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
