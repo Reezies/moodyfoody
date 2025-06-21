@@ -1,99 +1,100 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import requests
 import os
 
+# Load data restoran
+EXCEL_FILE = os.path.join(os.path.dirname(__file__), 'Book1.xlsx')
+df = pd.read_excel(EXCEL_FILE)
+
+# Tag poin sistem
+MOOD_TAG_POINTS = {
+    "sedih": ["snack", "comfort", "manis", "junkfood", "creamy", "gurih", "hangat"],
+    "marah": ["pedas", "snack", "crunchy", "berbumbu", "berminyak"],
+    "senang": ["healthy", "segar", "fresh", "buah", "salad", "jus"],
+    "bosan": ["autentik", "mahal", "fusion", "aesthetic", "berwarna"],
+}
+MOOD_TAG_WEIGHT = {"sedih": 1, "marah": 1, "senang": 2, "bosan": 2}
+
+WEATHER_TAG_POINTS = {
+    "Clear": ["dingin"],
+    "Rain": ["kuah", "hangat"],
+    "Clouds": []
+}
+WEATHER_TAG_WEIGHT = {"Clear": 2, "Rain": 1, "Clouds": 0}
+
+# API Cuaca
 API_KEY = "071c48a3ee374d04bbcfeb42e452d2d4"
-EXCEL_FILE = "Book1.xlsx"
 
-# Tag dan poin
-MOOD_TAGS = {
-    "sedih": {"snack": 1, "comfort": 1, "manis": 1, "siapsaji": 1, "creamy": 1, "gurih": 1, "hangat": 1},
-    "marah": {"pedas": 1, "siapsaji": 1, "snack": 1, "crunchy": 1, "berbumbu": 1, "berminyak": 1},
-    "senang": {"healthy": 2, "segar": 2, "fresh": 2, "buah": 2, "salad": 2, "jus": 2, "comfort": 1},
-    "bosan": {"autentik": 2, "mahal": 2, "fusion": 2, "aesthetic": 2}
-}
-
-CUACA_TAGS = {
-    "panas terik": {"dingin": 1, "es": 1, "salad": 1, "buah": 1},
-    "hujan": {"kuah": 1, "hangat": 1, "pedas": 1, "rebus": 1, "comfort": 1},
-    "berawan": {"ringan": 2, "snack": 2, "netral": 2}
-}
-
-KEY_TAGS = {
-    "marah": ["pedas", "crunchy", "snack", "berminyak"],
-    "sedih": ["comfort", "hangat", "siapsaji", "manis"]
-}
-
-def load_data():
-    df = pd.read_excel(EXCEL_FILE)
-    df["tags"] = df["tags"].apply(lambda x: [t.strip().lower() for t in str(x).split(",")])
-    return df
-
-def get_weather(kecamatan):
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={kecamatan},ID&appid={API_KEY}&units=metric&lang=id"
+def get_weather(city):
     try:
-        response = requests.get(url).json()
-        weather_main = response["weather"][0]["main"]
-        temp = response["main"]["temp"]
-
-        if weather_main == "Clear" and temp > 30:
-            return "Cerah", "panas terik"
-        elif weather_main in ["Rain", "Drizzle", "Thunderstorm"]:
-            return "Hujan", "hujan"
-        elif weather_main in ["Clouds", "Mist", "Haze", "Fog"]:
-            return "Berawan", "berawan"
-        else:
-            return "Berawan", "berawan"
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city},ID&appid={API_KEY}&units=metric"
+        res = requests.get(url).json()
+        return res['weather'][0]['main']
     except:
-        return "Berawan", "berawan"
+        return ""
 
-def calculate_score(tags, mood, cuaca):
-    skor = 0
-    if mood in MOOD_TAGS:
-        skor += sum([MOOD_TAGS[mood].get(t, 0) for t in tags])
-    if cuaca in CUACA_TAGS:
-        skor += sum([CUACA_TAGS[cuaca].get(t, 0) for t in tags])
-    return skor
+# UI START
+st.set_page_config(page_title="MoodyFoody", layout="centered")
+st.markdown("<style>body { background-color: #FFF9F0; }</style>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #FFAD60;'>MoodyFoody</h1>", unsafe_allow_html=True)
 
-# Streamlit UI
-st.set_page_config(page_title="MoodyFoody", layout="wide")
-st.title("MoodyFoody 🍽️")
+# Popup mood pilihan
+if "selected_mood" not in st.session_state:
+    with st.modal("Apa mood kamu hari ini?"):
+        st.write("Pilih salah satu mood untuk dapatkan rekomendasi makanan:")
+        cols = st.columns(4)
+        for i, mood in enumerate(["sedih", "marah", "senang", "bosan"]):
+            if cols[i].button(mood.capitalize()):
+                st.session_state.selected_mood = mood
+                st.rerun()
 
-mood = st.radio("Pilih Mood Kamu", ["senang", "sedih", "marah", "bosan"], horizontal=True)
-df = load_data()
-kecamatan_list = sorted(df["kecamatan"].unique())
-kecamatan = st.selectbox("Pilih Kecamatan", kecamatan_list)
+# Dropdown kecamatan
+kecamatan_list = df["kecamatan"].dropna().unique().tolist()
+kecamatan = st.selectbox("Pilih Kecamatan", sorted(kecamatan_list), key="kec_drop")
 
-if kecamatan:
-    cuaca_display, cuaca_penilaian = get_weather(kecamatan)
-    st.markdown(f"### Mood: **{mood}**, Cuaca di **{kecamatan.title()}**: {cuaca_display}")
+if st.button("Cari Rekomendasi"):
+    selected_mood = st.session_state.get("selected_mood", "sedih")
+    weather = get_weather("Yogyakarta")
 
-    df_filtered = df[df["kecamatan"].str.lower() == kecamatan.lower()].copy()
-    df_filtered["skor"] = df_filtered["tags"].apply(lambda tags: calculate_score(tags, mood, cuaca_penilaian))
-    df_filtered = df_filtered[df_filtered["skor"] > 0].copy()
+    st.markdown(f"<div class='result-mood-box'>Mood: <b>{selected_mood.capitalize()}</b> | Cuaca: <b>{weather}</b></div>", unsafe_allow_html=True)
 
-    df_filtered["rating"] = pd.to_numeric(df_filtered["rating"].astype(str).str.replace(",", "."), errors="coerce")
-    df_filtered["jumlah_rating"] = pd.to_numeric(df_filtered["jumlah_rating"].astype(str).str.replace(".", "", regex=False).str.replace(",", ""), errors="coerce")
-    df_filtered["feedback_score"] = df_filtered.apply(lambda row: row["rating"] * np.log10(row["jumlah_rating"] + 1), axis=1)
+    # Scoring
+    def hitung_skor(tags):
+        skor = 0
+        for tag in str(tags).split(","):
+            tag = tag.strip().lower()
+            if tag in MOOD_TAG_POINTS[selected_mood]:
+                skor += MOOD_TAG_WEIGHT[selected_mood]
+            if tag in WEATHER_TAG_POINTS.get(weather, []):
+                skor += WEATHER_TAG_WEIGHT[weather]
+        return skor
 
-    kategori_1 = df_filtered.sort_values(["skor", "feedback_score"], ascending=[False, False]).groupby("jenis_makanan", as_index=False).first()
-    kategori_1["jempol"] = True
+    filtered = df[df["kecamatan"] == kecamatan].copy()
+    filtered["skor"] = filtered["tags"].apply(hitung_skor)
+    filtered = filtered.sort_values(by="skor", ascending=False)
 
-    sisa = df_filtered[~df_filtered["nama"].isin(kategori_1["nama"])]
-    key_tags = set(KEY_TAGS.get(mood, []))
-    kategori_2 = sisa[sisa["tags"].apply(lambda tags: any(tag in key_tags for tag in tags))].copy()
-    kategori_2["jempol"] = True
+    # Tampilkan hasil
+    st.markdown("<div class='results-scroll-container'>", unsafe_allow_html=True)
+    for idx, row in filtered.iterrows():
+        st.markdown("""
+            <div class='resto-box {highlight}'>
+                <div class='resto-row'>
+                    <div class='resto-name'>{name}</div>
+                    <div class='resto-rating'>⭐ {rating}</div>
+                    <div><a href='{link}' target='_blank'>Maps</a></div>
+                    {icon}
+                </div>
+            </div>
+        """.format(
+            name=row["nama"],
+            rating=row["rating"],
+            link=row["link"],
+            icon="<div class='icon'>👍</div>" if row["skor"] == filtered["skor"].max() and row["skor"] > 0 else "",
+            highlight="highlight" if row["skor"] == filtered["skor"].max() and row["skor"] > 0 else ""
+        ), unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    kategori_3 = kategori_1.copy()
-    kategori_3["jempol"] = False
-
-    final_df = pd.concat([kategori_1, kategori_2, kategori_3], ignore_index=True)
-    final_df = final_df.sort_values(["jempol", "skor", "feedback_score"], ascending=[False, False, False])
-
-    for _, row in final_df.iterrows():
-        st.markdown(f"### {row['nama']} {'👍' if row['jempol'] else ''}")
-        st.write(f"⭐ {row['rating']} ({int(row['jumlah_rating'])} ulasan)")
-        st.write(f"[Lihat di Maps]({row['g_link']})")
-        st.markdown("---")
+# Tambahan CSS
+with open("style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
