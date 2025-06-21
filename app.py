@@ -39,7 +39,6 @@ st.set_page_config(page_title="MoodyFoody", layout="centered")
 st.markdown("<style>body { background-color: #FFF9F0; }</style>", unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center; color: #FFAD60;'>MoodyFoody</h1>", unsafe_allow_html=True)
 
-import streamlit as st
 
 # Set default hanya sekali
 if "show_popup" not in st.session_state:
@@ -47,36 +46,36 @@ if "show_popup" not in st.session_state:
 
 # Tampilkan popup simulasi
 if st.session_state.show_popup and "selected_mood" not in st.session_state:
-    st.markdown(
-        """
-        <div class="popup">
-            <div class="popup-content">
-                <h3>Apa mood kamu hari ini?</h3>
-        """,
-        unsafe_allow_html=True,
-    )
+    with st.container():
+        st.markdown("""
+            <div class="popup">
+                <div class="popup-content">
+                    <h3>Apa mood kamu hari ini?</h3>
+            """, unsafe_allow_html=True)
 
-    # Tombol mood dalam 4 kolom agar sejajar
-    col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            if st.button("😊 Senang"):
+                st.session_state.selected_mood = "senang"
+                st.session_state.show_popup = False
+        with col2:
+            if st.button("😢 Sedih"):
+                st.session_state.selected_mood = "sedih"
+                st.session_state.show_popup = False
+        with col3:
+            if st.button("😡 Marah"):
+                st.session_state.selected_mood = "marah"
+                st.session_state.show_popup = False
+        with col4:
+            if st.button("😐 Bosan"):
+                st.session_state.selected_mood = "bosan"
+                st.session_state.show_popup = False
 
-    with col1:
-        if st.button("😊 Senang"):
-            st.session_state.selected_mood = "senang"
-            st.session_state.show_popup = False
-    with col2:
-        if st.button("😢 Sedih"):
-            st.session_state.selected_mood = "sedih"
-            st.session_state.show_popup = False
-    with col3:
-        if st.button("😡 Marah"):
-            st.session_state.selected_mood = "marah"
-            st.session_state.show_popup = False
-    with col4:
-        if st.button("😐 Bosan"):
-            st.session_state.selected_mood = "bosan"
-            st.session_state.show_popup = False
+        st.markdown("""
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
 
-    st.markdown("</div></div>", unsafe_allow_html=True)
 
 
  
