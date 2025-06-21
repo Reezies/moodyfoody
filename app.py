@@ -8,11 +8,6 @@ app = Flask(__name__)
 API_KEY = "071c48a3ee374d04bbcfeb42e452d2d4"
 EXCEL_FILE = os.path.join(os.path.dirname(__file__), 'Book1.xlsx')
 
-def load_data():
-    df = pd.read_excel(EXCEL_FILE)
-    return df
-
-
 # Tag dan poin
 MOOD_TAGS = {
     "sedih": {
@@ -26,6 +21,7 @@ MOOD_TAGS = {
     },
     "marah": {
         "pedas": 1,
+        "siapsaji": 1,
         "snack": 1,
         "crunchy": 1,
         "berbumbu": 1,
@@ -37,7 +33,8 @@ MOOD_TAGS = {
         "fresh": 2,
         "buah": 2,
         "salad": 2,
-        "jus": 2
+        "jus": 2,
+        "comfort": 1,
     },
     "bosan": {
         "autentik": 2,
@@ -66,6 +63,11 @@ CUACA_TAGS = {
         "snack": 2,
         "netral": 2
     }
+}
+
+KEY_TAGS = {
+    "marah": ["pedas", "crunchy", "snack", "berminyak"],
+    "sedih": ["comfort", "hangat", "siapsaji", "manis"]
 }
 
 # Load data
@@ -139,29 +141,36 @@ def rekomendasi():
     df_filtered["skor"] = df_filtered["tags"].apply(lambda tags: calculate_score(tags, mood, cuaca_penilaian))
     df_filtered = df_filtered[df_filtered["skor"] > 0].copy()
 
+    df_filtered["rating"] = df_filtered["rating"].astype(str).str.replace(",", ".")
     df_filtered["rating"] = pd.to_numeric(df_filtered["rating"], errors="coerce").fillna(0)
-    df_filtered["j_rating"] = pd.to_numeric(df_filtered["j_rating"], errors="coerce").fillna(0)
-    df_filtered["feedback_score"] = df_filtered.apply(lambda row: row["rating"] * np.log10(row["j_rating"] + 1), axis=1)
 
+    df_filtered["jumlah_rating"] = df_filtered["jumlah_rating"].astype(str).str.replace(".", "", regex=False)
+    df_filtered["jumlah_rating"] = df_filtered["jumlah_rating"].str.replace(",", "", regex=False)
+    df_filtered["jumlah_rating"] = pd.to_numeric(df_filtered["jumlah_rating"], errors="coerce").fillna(0)
+
+    df_filtered["feedback_score"] = df_filtered.apply(lambda row: row["rating"] * np.log10(row["jumlah_rating"] + 1), axis=1)
+
+    # Kategori 1: 1 terbaik per jenis_makanan
     kategori_1 = df_filtered.sort_values(["skor", "feedback_score"], ascending=[False, False])
-    kategori_1 = kategori_1.groupby("j_makanan", as_index=False).first()
+    kategori_1 = kategori_1.groupby("jenis_makanan", as_index=False).first()
     kategori_1["jempol"] = True
 
+    # Kategori 2: sisa yang punya key tag (khusus mood sedih/marah)
     sisa = df_filtered[~df_filtered["nama"].isin(kategori_1["nama"])]
-
-    key_tags = set(MOOD_TAGS.get(mood, {}))
-    sisa["has_key_tag"] = sisa["tags"].apply(lambda tags: any(tag in key_tags for tag in tags))
-    kategori_2 = sisa[sisa["has_key_tag"]].copy()
+    key_tags = set(KEY_TAGS.get(mood, []))
+    kategori_2 = sisa[sisa["tags"].apply(lambda tags: any(tag in key_tags for tag in tags))].copy()
     kategori_2["jempol"] = True
 
-    kategori_3 = sisa[~sisa["nama"].isin(kategori_2["nama"])]
+    # Kategori 3: salinan kategori_1 tapi jempol False
+    kategori_3 = kategori_1.copy()
     kategori_3["jempol"] = False
 
+    # Gabungkan kategori 1, 2, dan 3 saja (yang lain tidak)
     final_df = pd.concat([kategori_1, kategori_2, kategori_3], ignore_index=True)
     final_df = final_df.sort_values(["jempol", "skor", "feedback_score"], ascending=[False, False, False])
 
     top_score = final_df["skor"].max()
-    rekomendasi = final_df[["nama", "rating", "j_rating", "link", "skor", "jempol"]].to_dict(orient="records")
+    rekomendasi = final_df[["nama", "rating", "jumlah_rating", "g_link", "skor", "jempol"]].to_dict(orient="records")
 
     return render_template("index.html", rekomendasi=rekomendasi, mood=mood, kecamatan=kecamatan, cuaca=cuaca_display, top_score=top_score, kecamatan_list=sorted(df["kecamatan"].unique()))
 
