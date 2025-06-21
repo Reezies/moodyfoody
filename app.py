@@ -39,16 +39,32 @@ st.set_page_config(page_title="MoodyFoody", layout="centered")
 st.markdown("<style>body { background-color: #FFF9F0; }</style>", unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center; color: #FFAD60;'>MoodyFoody</h1>", unsafe_allow_html=True)
 
-# Popup mood pilihan
-if "selected_mood" not in st.session_state:
-    with st.modal("Apa mood kamu hari ini?"):
-        st.write("Pilih salah satu mood untuk dapatkan rekomendasi makanan:")
-        cols = st.columns(4)
-        for i, mood in enumerate(["sedih", "marah", "senang", "bosan"]):
-            if cols[i].button(mood.capitalize()):
-                st.session_state.selected_mood = mood
-                st.rerun()
+import streamlit as st
 
+# Set default hanya sekali
+if "show_popup" not in st.session_state:
+    st.session_state.show_popup = True
+
+# Tampilkan popup simulasi
+if st.session_state.show_popup:
+    st.markdown(
+        """
+        <div class="popup">
+            <div class="popup-content">
+                <h3>Apa mood kamu hari ini?</h3>
+                <form action="" method="post">
+                    <button type="submit" name="mood" value="Senang">😊 Senang</button>
+                    <button type="submit" name="mood" value="Sedih">😢 Sedih</button>
+                    <button type="submit" name="mood" value="Marah">😡 Marah</button>
+                    <button type="submit" name="mood" value="Bosan">😐 Bosan</button>
+                </form>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+ 
 # Dropdown kecamatan
 kecamatan_list = df["kecamatan"].dropna().unique().tolist()
 kecamatan = st.selectbox("Pilih Kecamatan", sorted(kecamatan_list), key="kec_drop")
