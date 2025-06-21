@@ -85,11 +85,11 @@ kecamatan_list = df["kecamatan"].dropna().unique().tolist()
 kecamatan = st.selectbox("Pilih Kecamatan", sorted(kecamatan_list), key="kec_drop")
 
 if st.button("Cari Rekomendasi"):
-if "selected_mood" not in st.session_state:
-    st.warning("Silakan pilih mood terlebih dahulu melalui popup di atas.")
-    st.stop()
-
-selected_mood = st.session_state.selected_mood
+    if "selected_mood" not in st.session_state:
+        st.warning("Silakan pilih mood terlebih dahulu melalui popup di atas.")
+        st.stop()
+    
+    selected_mood = st.session_state.selected_mood
 
     weather = get_weather("Yogyakarta")
 
