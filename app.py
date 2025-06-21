@@ -43,25 +43,34 @@ st.markdown("<h1 style='text-align: center; color: #FFAD60;'>MoodyFoody</h1>", u
 # Set default hanya sekali
 if "show_popup" not in st.session_state:
     st.session_state.show_popup = True
-
-# Tampilkan popup simulasi
+# Tampilkan simulasi popup sederhana
 if "selected_mood" not in st.session_state:
-    with st.modal("Apa mood kamu hari ini?"):
-        st.markdown("### Pilih mood kamu:")
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            if st.button("😊 Senang"):
-                st.session_state.selected_mood = "senang"
-        with col2:
-            if st.button("😢 Sedih"):
-                st.session_state.selected_mood = "sedih"
-        with col3:
-            if st.button("😡 Marah"):
-                st.session_state.selected_mood = "marah"
-        with col4:
-            if st.button("😐 Bosan"):
-                st.session_state.selected_mood = "bosan"
+    st.markdown("""
+        <div style='
+            background-color: white;
+            border: 2px solid #FFAD60;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        '>
+            <h3>Apa mood kamu hari ini?</h3>
+        </div>
+    """, unsafe_allow_html=True)
 
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("😊 Senang"):
+            st.session_state.selected_mood = "senang"
+    with col2:
+        if st.button("😢 Sedih"):
+            st.session_state.selected_mood = "sedih"
+    with col3:
+        if st.button("😡 Marah"):
+            st.session_state.selected_mood = "marah"
+    with col4:
+        if st.button("😐 Bosan"):
+            st.session_state.selected_mood = "bosan"
 
 
 
