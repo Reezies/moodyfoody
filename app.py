@@ -45,36 +45,23 @@ if "show_popup" not in st.session_state:
     st.session_state.show_popup = True
 
 # Tampilkan popup simulasi
-if st.session_state.show_popup and "selected_mood" not in st.session_state:
-    with st.container():
-        st.markdown("""
-            <div class="popup">
-                <div class="popup-content">
-                    <h3>Apa mood kamu hari ini?</h3>
-            """, unsafe_allow_html=True)
-
+if "selected_mood" not in st.session_state:
+    with st.modal("Apa mood kamu hari ini?"):
+        st.markdown("### Pilih mood kamu:")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             if st.button("😊 Senang"):
                 st.session_state.selected_mood = "senang"
-                st.session_state.show_popup = False
         with col2:
             if st.button("😢 Sedih"):
                 st.session_state.selected_mood = "sedih"
-                st.session_state.show_popup = False
         with col3:
             if st.button("😡 Marah"):
                 st.session_state.selected_mood = "marah"
-                st.session_state.show_popup = False
         with col4:
             if st.button("😐 Bosan"):
                 st.session_state.selected_mood = "bosan"
-                st.session_state.show_popup = False
 
-        st.markdown("""
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
 
 
 
