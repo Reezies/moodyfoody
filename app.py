@@ -46,7 +46,6 @@ if "show_popup" not in st.session_state:
 # Tampilkan simulasi popup sederhana
 # Jika mood belum dipilih, tampilkan modal palsu
 if "selected_mood" not in st.session_state:
-
     st.markdown("""
         <div style="
             position: fixed;
@@ -67,23 +66,28 @@ if "selected_mood" not in st.session_state:
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             ">
                 <h3 style="color: #FFAD60;">Apa mood kamu hari ini?</h3>
-                <div style="display: flex; justify-content: space-around; margin-top: 20px;">
-                    <form action="" method="post">
-                        <button name="mood" value="senang" style="padding:10px; border:none; background:#FFAD60; border-radius:8px;">😊 Senang</button>
-                        <button name="mood" value="sedih" style="padding:10px; border:none; background:#FFAD60; border-radius:8px;">😢 Sedih</button>
-                        <button name="mood" value="marah" style="padding:10px; border:none; background:#FFAD60; border-radius:8px;">😡 Marah</button>
-                        <button name="mood" value="bosan" style="padding:10px; border:none; background:#FFAD60; border-radius:8px;">😐 Bosan</button>
-                    </form>
-                </div>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # Tangkap nilai dari tombol (form HTML)
-    mood_value = st.experimental_get_query_params().get("mood", [None])[0]
-    if mood_value:
-        st.session_state.selected_mood = mood_value
-        st.rerun()
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("😊 Senang"):
+            st.session_state.selected_mood = "senang"
+            st.experimental_rerun()
+    with col2:
+        if st.button("😢 Sedih"):
+            st.session_state.selected_mood = "sedih"
+            st.experimental_rerun()
+    with col3:
+        if st.button("😡 Marah"):
+            st.session_state.selected_mood = "marah"
+            st.experimental_rerun()
+    with col4:
+        if st.button("😐 Bosan"):
+            st.session_state.selected_mood = "bosan"
+            st.experimental_rerun()
+
     st.stop()
 
 
