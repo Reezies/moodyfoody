@@ -107,39 +107,41 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align: center; color: #FFAD60;'>🍽️ MoodyFoody 🍽️</h1>", unsafe_allow_html=True)
 
-# Mood popup awal
+# Popup Pilih Mood (tanpa form HTML)
 if "mood" not in st.session_state:
     st.markdown("""
     <div class='popup-container'>
         <div class='popup-box'>
             <h4>Pilih Mood Kamu</h4>
             <div class='popup-buttons'>
-                <form action="" method="post">
-                    <button name="mood" type="submit" formaction="?set_mood=senang">😊 Senang</button>
-                    <button name="mood" type="submit" formaction="?set_mood=sedih">😢 Sedih</button>
-                    <button name="mood" type="submit" formaction="?set_mood=marah">😠 Marah</button>
-                    <button name="mood" type="submit" formaction="?set_mood=bosan">😐 Bosan</button>
-                </form>
+                <button onclick="window.location.href='?mood=senang'">😊 Senang</button>
+                <button onclick="window.location.href='?mood=sedih'">😢 Sedih</button>
+                <button onclick="window.location.href='?mood=marah'">😠 Marah</button>
+                <button onclick="window.location.href='?mood=bosan'">😐 Bosan</button>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    params = st.experimental_get_query_params()
-    if "set_mood" in params:
-        st.session_state.mood = params["set_mood"][0]
+    # Deteksi jika ada query string "mood"
+    query_params = st.experimental_get_query_params()
+    if "mood" in query_params:
+        st.session_state.mood = query_params["mood"][0]
         st.experimental_rerun()
     st.stop()
 
-# Mood dan kecamatan
+# Pilih Kecamatan dan ganti mood
 cols = st.columns([4,1])
 kecamatan_list = sorted(load_data()["kecamatan"].unique())
 kecamatan = cols[0].selectbox("Pilih Kecamatan", kecamatan_list)
-if cols[1].button(f"{ '😊' if st.session_state.mood == 'senang' else '😢' if st.session_state.mood == 'sedih' else '😠' if st.session_state.mood == 'marah' else '😐' }"):
+if cols[1].button(
+    f"{'😊' if st.session_state.mood == 'senang' else '😢' if st.session_state.mood == 'sedih' else '😠' if st.session_state.mood == 'marah' else '😐'}",
+    help="Klik untuk ganti mood"
+):
     del st.session_state.mood
     st.experimental_rerun()
 
-# Proses dan hasil
+# Tampilkan rekomendasi
 if kecamatan:
     df = load_data()
     cuaca_display, cuaca_penilaian = get_weather(kecamatan)
