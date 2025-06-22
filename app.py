@@ -139,7 +139,7 @@ if cols[1].button(
     help="Klik untuk ganti mood"
 ):
     del st.session_state.mood
-    st.experimental_rerun()
+    st.experimental_page()
 
 # Tampilkan rekomendasi
 if kecamatan:
