@@ -127,7 +127,7 @@ if "mood" not in st.session_state:
     query_params = st.experimental_get_query_params()
     if "mood" in query_params:
         st.session_state.mood = query_params["mood"][0]
-        st.experimental_rerun()
+        st.experimental_return()
     st.stop()
 
 # Pilih Kecamatan dan ganti mood
