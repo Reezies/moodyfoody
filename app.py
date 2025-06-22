@@ -81,22 +81,71 @@ st.markdown("""
             font-size: 18px;
             color: green;
         }
+        .popup-container {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .popup-box {
+            background-color: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 style='text-align: center; color: #FFAD60;'>🍽️ MoodyFoody 🍽️</h1>", unsafe_allow_html=True)
 
-mood = st.radio("Pilih Mood Kamu", ["senang", "sedih", "marah", "bosan"], horizontal=True)
-df = load_data()
-kecamatan_list = sorted(df["kecamatan"].unique())
-kecamatan = st.selectbox("Pilih Kecamatan", kecamatan_list)
+# Mood popup awal
+if "mood" not in st.session_state:
+    with st.container():
+        col1, col2, col3, col4 = st.columns(4)
+        st.markdown("""
+        <div class='popup-container'>
+            <div class='popup-box'>
+                <h4>Pilih Mood Kamu</h4>
+        """, unsafe_allow_html=True)
+        with col1:
+            if st.button("😊 Senang"):
+                st.session_state.mood = "senang"
+                st.experimental_rerun()
+        with col2:
+            if st.button("😢 Sedih"):
+                st.session_state.mood = "sedih"
+                st.experimental_rerun()
+        with col3:
+            if st.button("😠 Marah"):
+                st.session_state.mood = "marah"
+                st.experimental_rerun()
+        with col4:
+            if st.button("😐 Bosan"):
+                st.session_state.mood = "bosan"
+                st.experimental_rerun()
+        st.markdown("""</div></div>""", unsafe_allow_html=True)
+        st.stop()
 
+# Mood dan kecamatan
+cols = st.columns([4,1])
+kecamatan_list = sorted(load_data()["kecamatan"].unique())
+kecamatan = cols[0].selectbox("Pilih Kecamatan", kecamatan_list)
+if cols[1].button(f"{ '😊' if st.session_state.mood == 'senang' else '😢' if st.session_state.mood == 'sedih' else '😠' if st.session_state.mood == 'marah' else '😐' }"):
+    del st.session_state.mood
+    st.experimental_rerun()
+
+# Proses dan hasil
 if kecamatan:
+    df = load_data()
     cuaca_display, cuaca_penilaian = get_weather(kecamatan)
-    st.markdown(f"### Mood: **{mood.capitalize()}**, Cuaca di **{kecamatan.title()}**: {cuaca_display}")
+    st.markdown(f"### Mood: **{st.session_state.mood.capitalize()}**, Cuaca di **{kecamatan.title()}**: {cuaca_display}")
 
     df_filtered = df[df["kecamatan"].str.lower() == kecamatan.lower()].copy()
-    df_filtered["skor"] = df_filtered["tags"].apply(lambda tags: calculate_score(tags, mood, cuaca_penilaian))
+    df_filtered["skor"] = df_filtered["tags"].apply(lambda tags: calculate_score(tags, st.session_state.mood, cuaca_penilaian))
     df_filtered = df_filtered[df_filtered["skor"] > 0].copy()
 
     df_filtered["rating"] = pd.to_numeric(df_filtered["rating"].astype(str).str.replace(",", "."), errors="coerce")
@@ -107,7 +156,7 @@ if kecamatan:
     kategori_1["jempol"] = True
 
     sisa = df_filtered[~df_filtered["nama"].isin(kategori_1["nama"])]
-    key_tags = set(KEY_TAGS.get(mood, []))
+    key_tags = set(KEY_TAGS.get(st.session_state.mood, []))
     kategori_2 = sisa[sisa["tags"].apply(lambda tags: any(tag in key_tags for tag in tags))].copy()
     kategori_2["jempol"] = True
 
