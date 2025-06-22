@@ -49,7 +49,7 @@ def calculate_score(tags, mood, cuaca):
     score += sum([CUACA_TAGS.get(cuaca, {}).get(tag, 0) for tag in tags])
     return score
 
-st.title("🍽️ MoodyFoody (Versi Streamlit)")
+st.title("🍽️ MoodyFoody (Excel + Streamlit)")
 
 df = load_data()
 kecamatan_list = sorted(df["kecamatan"].unique())
@@ -79,20 +79,20 @@ if st.button("Cari Rekomendasi"):
     kategori_2 = sisa[sisa["tags"].apply(lambda tags: any(tag in key_tags for tag in tags))].copy()
     kategori_2["jempol"] = True
 
-    # Kategori 3 (tanpa jempol)
+    # Kategori 3
     kategori_3 = kategori_1.copy()
     kategori_3["jempol"] = False
 
     final_df = pd.concat([kategori_1, kategori_2, kategori_3], ignore_index=True)
     final_df = final_df.sort_values(["jempol", "skor", "feedback_score"], ascending=[False, False, False])
 
-    st.subheader(f"Rekomendasi untuk mood *{mood}* di *{kecamatan}* dengan cuaca *{cuaca}*")
+    st.subheader(f"Rekomendasi untuk *{mood}* di *{kecamatan}* (cuaca: *{cuaca}*)")
 
     for _, row in final_df.iterrows():
         st.markdown(f"### {row['nama']}")
         st.write(f"⭐ {row['rating']} ({int(row['jumlah_rating'])} ulasan)")
         st.write(f"🎯 Skor: {row['skor']}")
-        st.write(f"[📍 Lihat di Google Maps]({row['g_link']})")
-        if row['jempol']:
+        st.write(f"[📍 Google Maps]({row['g_link']})")
+        if row["jempol"]:
             st.write("👍 Rekomendasi Utama")
         st.markdown("---")
