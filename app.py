@@ -58,24 +58,58 @@ KEY_TAGS = {
 
 # UI
 st.set_page_config(page_title="MoodyFoody", layout="centered")
-
-# Mood Selector
-if "mood" not in st.session_state:
-    with st.modal("Pilih Mood Kamu"):
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            if st.button("😊", key="senang"): st.session_state.mood = "senang"; st.experimental_rerun()
-        with col2:
-            if st.button("😢", key="sedih"): st.session_state.mood = "sedih"; st.experimental_rerun()
-        with col3:
-            if st.button("😠", key="marah"): st.session_state.mood = "marah"; st.experimental_rerun()
-        with col4:
-            if st.button("😐", key="bosan"): st.session_state.mood = "bosan"; st.experimental_rerun()
+st.markdown("""
+    <style>
+        body { background-color: #FFF9F0; }
+        .resto-box {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .resto-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFAD60;
+        }
+        .resto-rating, .resto-link {
+            font-size: 14px;
+            color: #555;
+        }
+        .jempol {
+            font-size: 18px;
+            color: green;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 st.markdown("<h1 style='text-align: center; color: #FFAD60;'>🍽️ MoodyFoody 🍽️</h1>", unsafe_allow_html=True)
 
-# Kecamatan Selector
-cols = st.columns([4, 1])
+# Pemilihan mood awal (popup hanya sekali)
+if "mood" not in st.session_state:
+    st.info("Silakan pilih mood kamu terlebih dahulu:")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("😊 Senang"):
+            st.session_state.mood = "senang"
+            st.experimental_rerun()
+    with col2:
+        if st.button("😢 Sedih"):
+            st.session_state.mood = "sedih"
+            st.experimental_rerun()
+    with col3:
+        if st.button("😠 Marah"):
+            st.session_state.mood = "marah"
+            st.experimental_rerun()
+    with col4:
+        if st.button("😐 Bosan"):
+            st.session_state.mood = "bosan"
+            st.experimental_rerun()
+    st.stop()
+
+# Pilih Kecamatan dan tombol ganti mood
+cols = st.columns([4,1])
 kecamatan_list = sorted(load_data()["kecamatan"].unique())
 kecamatan = cols[0].selectbox("Pilih Kecamatan", kecamatan_list)
 if cols[1].button(
@@ -115,9 +149,9 @@ if kecamatan:
 
     for _, row in final_df.iterrows():
         st.markdown(f"""
-        <div style='background-color: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 16px; margin-bottom: 16px;'>
-            <div style='font-size: 20px; font-weight: bold; color: #FFAD60;'>{row['nama']} {'<span style="color:green">👍</span>' if row['jempol'] else ''}</div>
-            <div style='font-size: 14px; color: #555;'>⭐ {row['rating']} ({int(row['jumlah_rating'])} ulasan)</div>
-            <div style='font-size: 14px;'><a href='{row['g_link']}' target='_blank'>Lihat di Maps</a></div>
+        <div class='resto-box'>
+            <div class='resto-title'>{row['nama']} {'<span class="jempol">👍</span>' if row['jempol'] else ''}</div>
+            <div class='resto-rating'>⭐ {row['rating']} ({int(row['jumlah_rating'])} ulasan)</div>
+            <div class='resto-link'><a href='{row['g_link']}' target='_blank'>Lihat di Maps</a></div>
         </div>
         """, unsafe_allow_html=True)
