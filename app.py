@@ -4,27 +4,9 @@ import numpy as np
 import requests
 import os
 
+# Konstanta
 API_KEY = "071c48a3ee374d04bbcfeb42e452d2d4"
 EXCEL_FILE = "Book1.xlsx"
-
-# Tag dan poin
-MOOD_TAGS = {
-    "sedih": {"snack": 1, "comfort": 1, "manis": 1, "siapsaji": 1, "creamy": 1, "gurih": 1, "hangat": 1},
-    "marah": {"pedas": 1, "siapsaji": 1, "snack": 1, "crunchy": 1, "berbumbu": 1, "berminyak": 1},
-    "senang": {"healthy": 2, "segar": 2, "fresh": 2, "buah": 2, "salad": 2, "jus": 2, "comfort": 1},
-    "bosan": {"autentik": 2, "mahal": 2, "fusion": 2, "aesthetic": 2}
-}
-
-CUACA_TAGS = {
-    "panas terik": {"dingin": 1, "es": 1, "salad": 1, "buah": 1},
-    "hujan": {"kuah": 1, "hangat": 1, "pedas": 1, "rebus": 1, "comfort": 1},
-    "berawan": {"ringan": 2, "snack": 2, "netral": 2}
-}
-
-KEY_TAGS = {
-    "marah": ["pedas", "crunchy", "snack", "berminyak"],
-    "sedih": ["comfort", "hangat", "siapsaji", "manis"]
-}
 
 def load_data():
     df = pd.read_excel(EXCEL_FILE)
@@ -57,9 +39,52 @@ def calculate_score(tags, mood, cuaca):
         skor += sum([CUACA_TAGS[cuaca].get(t, 0) for t in tags])
     return skor
 
-# Streamlit UI
-st.set_page_config(page_title="MoodyFoody", layout="wide")
-st.title("MoodyFoody 🍽️")
+# Tag dan Poin
+MOOD_TAGS = {
+    "sedih": {"snack": 1, "comfort": 1, "manis": 1, "siapsaji": 1, "creamy": 1, "gurih": 1, "hangat": 1},
+    "marah": {"pedas": 1, "siapsaji": 1, "snack": 1, "crunchy": 1, "berbumbu": 1, "berminyak": 1},
+    "senang": {"healthy": 2, "segar": 2, "fresh": 2, "buah": 2, "salad": 2, "jus": 2, "comfort": 1},
+    "bosan": {"autentik": 2, "mahal": 2, "fusion": 2, "aesthetic": 2}
+}
+CUACA_TAGS = {
+    "panas terik": {"dingin": 1, "es": 1, "salad": 1, "buah": 1},
+    "hujan": {"kuah": 1, "hangat": 1, "pedas": 1, "rebus": 1, "comfort": 1},
+    "berawan": {"ringan": 2, "snack": 2, "netral": 2}
+}
+KEY_TAGS = {
+    "marah": ["pedas", "crunchy", "snack", "berminyak"],
+    "sedih": ["comfort", "hangat", "siapsaji", "manis"]
+}
+
+# UI
+st.set_page_config(page_title="MoodyFoody", layout="centered")
+st.markdown("""
+    <style>
+        body { background-color: #FFF9F0; }
+        .resto-box {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .resto-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFAD60;
+        }
+        .resto-rating, .resto-link {
+            font-size: 14px;
+            color: #555;
+        }
+        .jempol {
+            font-size: 18px;
+            color: green;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown("<h1 style='text-align: center; color: #FFAD60;'>🍽️ MoodyFoody 🍽️</h1>", unsafe_allow_html=True)
 
 mood = st.radio("Pilih Mood Kamu", ["senang", "sedih", "marah", "bosan"], horizontal=True)
 df = load_data()
@@ -68,7 +93,7 @@ kecamatan = st.selectbox("Pilih Kecamatan", kecamatan_list)
 
 if kecamatan:
     cuaca_display, cuaca_penilaian = get_weather(kecamatan)
-    st.markdown(f"### Mood: **{mood}**, Cuaca di **{kecamatan.title()}**: {cuaca_display}")
+    st.markdown(f"### Mood: **{mood.capitalize()}**, Cuaca di **{kecamatan.title()}**: {cuaca_display}")
 
     df_filtered = df[df["kecamatan"].str.lower() == kecamatan.lower()].copy()
     df_filtered["skor"] = df_filtered["tags"].apply(lambda tags: calculate_score(tags, mood, cuaca_penilaian))
@@ -93,7 +118,10 @@ if kecamatan:
     final_df = final_df.sort_values(["jempol", "skor", "feedback_score"], ascending=[False, False, False])
 
     for _, row in final_df.iterrows():
-        st.markdown(f"### {row['nama']} {'👍' if row['jempol'] else ''}")
-        st.write(f"⭐ {row['rating']} ({int(row['jumlah_rating'])} ulasan)")
-        st.write(f"[Lihat di Maps]({row['g_link']})")
-        st.markdown("---")
+        st.markdown(f"""
+        <div class='resto-box'>
+            <div class='resto-title'>{row['nama']} {'<span class="jempol">👍</span>' if row['jempol'] else ''}</div>
+            <div class='resto-rating'>⭐ {row['rating']} ({int(row['jumlah_rating'])} ulasan)</div>
+            <div class='resto-link'><a href='{row['g_link']}' target='_blank'>Lihat di Maps</a></div>
+        </div>
+        """, unsafe_allow_html=True)
