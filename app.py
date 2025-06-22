@@ -48,54 +48,54 @@ if "show_popup" not in st.session_state:
 if "selected_mood" not in st.session_state:
     st.markdown("""
         <style>
-            .modal-overlay {
+            .overlay {
                 position: fixed;
                 top: 0; left: 0; right: 0; bottom: 0;
-                background-color: rgba(0,0,0,0.6);
+                background-color: rgba(0,0,0,0.5);
+                z-index: 9999;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                z-index: 9999;
             }
-            .modal-content {
+            .popup-box {
                 background-color: #FFF9F0;
                 padding: 30px;
-                border-radius: 16px;
+                border-radius: 20px;
                 text-align: center;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.2);
                 max-width: 400px;
                 width: 90%;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             }
-            .mood-btn {
-                display: inline-block;
-                margin: 10px;
-                padding: 10px 20px;
-                font-size: 18px;
-                background-color: #FFAD60;
-                color: white;
-                border: none;
-                border-radius: 10px;
-                cursor: pointer;
+            .popup-title {
+                font-size: 22px;
+                color: #FFAD60;
+                margin-bottom: 20px;
+            }
+            .popup-btn {
+                margin: 8px;
             }
         </style>
-        <div class="modal-overlay">
-            <div class="modal-content">
-                <h3 style="color:#FFAD60;">Apa mood kamu hari ini?</h3>
-                <form action="" method="post">
-                    <button class="mood-btn" name="mood" value="senang">😊 Senang</button>
-                    <button class="mood-btn" name="mood" value="sedih">😢 Sedih</button>
-                    <button class="mood-btn" name="mood" value="marah">😠 Marah</button>
-                    <button class="mood-btn" name="mood" value="bosan">😐 Bosan</button>
-                </form>
+        <div class="overlay">
+            <div class="popup-box">
+                <div class="popup-title">Apa mood kamu hari ini?</div>
+                <div class="popup-btn">
+                    <button onClick="window.location.href='/?mood=senang'">😊 Senang</button>
+                    <button onClick="window.location.href='/?mood=sedih'">😢 Sedih</button>
+                    <button onClick="window.location.href='/?mood=marah'">😠 Marah</button>
+                    <button onClick="window.location.href='/?mood=bosan'">😐 Bosan</button>
+                </div>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # Tangkap pilihan tombol
-    if st.session_state.get("mood"):
-        st.session_state.selected_mood = st.session_state.mood
+    # Ambil dari query params
+    query_params = st.experimental_get_query_params()
+    if "mood" in query_params:
+        st.session_state.selected_mood = query_params["mood"][0]
         st.experimental_rerun()
+
     st.stop()
+
 
 
 
