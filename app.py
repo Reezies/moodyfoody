@@ -58,80 +58,24 @@ KEY_TAGS = {
 
 # UI
 st.set_page_config(page_title="MoodyFoody", layout="centered")
-st.markdown("""
-    <style>
-        body { background-color: #FFF9F0; }
-        .resto-box {
-            background-color: white;
-            border-radius: 16px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .resto-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #FFAD60;
-        }
-        .resto-rating, .resto-link {
-            font-size: 14px;
-            color: #555;
-        }
-        .jempol {
-            font-size: 18px;
-            color: green;
-        }
-        .popup-container {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-        .popup-box {
-            background-color: white;
-            padding: 30px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-            width: 80%;
-            max-width: 400px;
-        }
-        .popup-buttons button {
-            margin: 6px;
-        }
-    </style>
-""", unsafe_allow_html=True)
+
+# Mood Selector
+if "mood" not in st.session_state:
+    with st.modal("Pilih Mood Kamu"):
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            if st.button("😊", key="senang"): st.session_state.mood = "senang"; st.experimental_rerun()
+        with col2:
+            if st.button("😢", key="sedih"): st.session_state.mood = "sedih"; st.experimental_rerun()
+        with col3:
+            if st.button("😠", key="marah"): st.session_state.mood = "marah"; st.experimental_rerun()
+        with col4:
+            if st.button("😐", key="bosan"): st.session_state.mood = "bosan"; st.experimental_rerun()
 
 st.markdown("<h1 style='text-align: center; color: #FFAD60;'>🍽️ MoodyFoody 🍽️</h1>", unsafe_allow_html=True)
 
-# Popup Pilih Mood (tanpa form HTML)
-if "mood" not in st.session_state:
-    st.markdown("""
-    <div class='popup-container'>
-        <div class='popup-box'>
-            <h4>Pilih Mood Kamu</h4>
-            <div class='popup-buttons'>
-                <button onclick="window.location.href='?mood=senang'">😊 Senang</button>
-                <button onclick="window.location.href='?mood=sedih'">😢 Sedih</button>
-                <button onclick="window.location.href='?mood=marah'">😠 Marah</button>
-                <button onclick="window.location.href='?mood=bosan'">😐 Bosan</button>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Deteksi jika ada query string "mood"
-    query_params = st.experimental_get_query_params()
-    if "mood" in query_params:
-        st.session_state.mood = query_params["mood"][0]
-        st.experimental_rerun()
-    st.stop()
-
-# Pilih Kecamatan dan ganti mood
-cols = st.columns([4,1])
+# Kecamatan Selector
+cols = st.columns([4, 1])
 kecamatan_list = sorted(load_data()["kecamatan"].unique())
 kecamatan = cols[0].selectbox("Pilih Kecamatan", kecamatan_list)
 if cols[1].button(
@@ -171,9 +115,9 @@ if kecamatan:
 
     for _, row in final_df.iterrows():
         st.markdown(f"""
-        <div class='resto-box'>
-            <div class='resto-title'>{row['nama']} {'<span class="jempol">👍</span>' if row['jempol'] else ''}</div>
-            <div class='resto-rating'>⭐ {row['rating']} ({int(row['jumlah_rating'])} ulasan)</div>
-            <div class='resto-link'><a href='{row['g_link']}' target='_blank'>Lihat di Maps</a></div>
+        <div style='background-color: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 16px; margin-bottom: 16px;'>
+            <div style='font-size: 20px; font-weight: bold; color: #FFAD60;'>{row['nama']} {'<span style="color:green">👍</span>' if row['jempol'] else ''}</div>
+            <div style='font-size: 14px; color: #555;'>⭐ {row['rating']} ({int(row['jumlah_rating'])} ulasan)</div>
+            <div style='font-size: 14px;'><a href='{row['g_link']}' target='_blank'>Lihat di Maps</a></div>
         </div>
         """, unsafe_allow_html=True)
