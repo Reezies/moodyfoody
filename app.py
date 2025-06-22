@@ -96,6 +96,11 @@ st.markdown("""
             border-radius: 16px;
             text-align: center;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            width: 80%;
+            max-width: 400px;
+        }
+        .popup-buttons button {
+            margin: 6px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -104,31 +109,27 @@ st.markdown("<h1 style='text-align: center; color: #FFAD60;'>🍽️ MoodyFoody 
 
 # Mood popup awal
 if "mood" not in st.session_state:
-    with st.container():
-        col1, col2, col3, col4 = st.columns(4)
-        st.markdown("""
-        <div class='popup-container'>
-            <div class='popup-box'>
-                <h4>Pilih Mood Kamu</h4>
-        """, unsafe_allow_html=True)
-        with col1:
-            if st.button("😊 Senang"):
-                st.session_state.mood = "senang"
-                st.experimental_rerun()
-        with col2:
-            if st.button("😢 Sedih"):
-                st.session_state.mood = "sedih"
-                st.experimental_rerun()
-        with col3:
-            if st.button("😠 Marah"):
-                st.session_state.mood = "marah"
-                st.experimental_rerun()
-        with col4:
-            if st.button("😐 Bosan"):
-                st.session_state.mood = "bosan"
-                st.experimental_rerun()
-        st.markdown("""</div></div>""", unsafe_allow_html=True)
-        st.stop()
+    st.markdown("""
+    <div class='popup-container'>
+        <div class='popup-box'>
+            <h4>Pilih Mood Kamu</h4>
+            <div class='popup-buttons'>
+                <form action="" method="post">
+                    <button name="mood" type="submit" formaction="?set_mood=senang">😊 Senang</button>
+                    <button name="mood" type="submit" formaction="?set_mood=sedih">😢 Sedih</button>
+                    <button name="mood" type="submit" formaction="?set_mood=marah">😠 Marah</button>
+                    <button name="mood" type="submit" formaction="?set_mood=bosan">😐 Bosan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    params = st.experimental_get_query_params()
+    if "set_mood" in params:
+        st.session_state.mood = params["set_mood"][0]
+        st.experimental_rerun()
+    st.stop()
 
 # Mood dan kecamatan
 cols = st.columns([4,1])
