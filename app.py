@@ -46,55 +46,51 @@ if "show_popup" not in st.session_state:
 # Tampilkan simulasi popup sederhana
 # Jika mood belum dipilih, tampilkan modal palsu
 if "selected_mood" not in st.session_state:
-    st.markdown("""
-        <style>
-            .overlay {
-                position: fixed;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background-color: rgba(0,0,0,0.5);
-                z-index: 9999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .popup-box {
-                background-color: #FFF9F0;
-                padding: 30px;
-                border-radius: 20px;
-                text-align: center;
-                box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-                max-width: 400px;
-                width: 90%;
-            }
-            .popup-title {
-                font-size: 22px;
-                color: #FFAD60;
-                margin-bottom: 20px;
-            }
-            .popup-btn {
-                margin: 8px;
-            }
-        </style>
-        <div class="overlay">
-            <div class="popup-box">
-                <div class="popup-title">Apa mood kamu hari ini?</div>
-                <div class="popup-btn">
-                    <button onClick="window.location.href='/?mood=senang'">😊 Senang</button>
-                    <button onClick="window.location.href='/?mood=sedih'">😢 Sedih</button>
-                    <button onClick="window.location.href='/?mood=marah'">😠 Marah</button>
-                    <button onClick="window.location.href='/?mood=bosan'">😐 Bosan</button>
+    with st.container():
+        st.markdown("""
+            <style>
+                .popup-container {
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background-color: rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                }
+                .popup-box {
+                    background-color: #FFF9F0;
+                    padding: 30px;
+                    border-radius: 16px;
+                    text-align: center;
+                    max-width: 400px;
+                    width: 90%;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                }
+            </style>
+            <div class="popup-container">
+                <div class="popup-box">
+                    <h3 style="color: #FFAD60;">Apa mood kamu hari ini?</h3>
                 </div>
             </div>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    # Ambil dari query params
-    query_params = st.experimental_get_query_params()
-    if "mood" in query_params:
-        st.session_state.selected_mood = query_params["mood"][0]
-        st.experimental_rerun()
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            if st.button("😊", key="mood_senang"):
+                st.session_state.selected_mood = "senang"
+        with col2:
+            if st.button("😢", key="mood_sedih"):
+                st.session_state.selected_mood = "sedih"
+        with col3:
+            if st.button("😠", key="mood_marah"):
+                st.session_state.selected_mood = "marah"
+        with col4:
+            if st.button("😐", key="mood_bosan"):
+                st.session_state.selected_mood = "bosan"
 
-    st.stop()
+        st.stop()
+
 
 
 
